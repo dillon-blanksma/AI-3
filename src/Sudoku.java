@@ -133,7 +133,7 @@ public class Sudoku
 		int col = unassigned.col;
 		ArrayList<Integer> domain = unassigned.domain;
 
-		// consider digits 1 to 9
+		// consider digits only within initial domain
 		for (int num = 0; num < domain.size(); num++)
 		{
 			//if looks promising
@@ -142,28 +142,34 @@ public class Sudoku
 				instance++;
 				// make tentative assignment
 				grid[row][col].value = domain.get(num);
-				states.put(instance, grid); //save the current state in a map for reference if we backtrack
 				
-				//updateSpecifiedDomains(grid, row, col, domain.get(num), true);
+				Cell [][] gridCopy = new Cell[N][N];
+				for (int i = 0; i < N; i++)
+					for (int j = 0; j < N; j++)
+						gridCopy[i][j] = grid[i][j].clone();
+	
+				states.put(instance, gridCopy); //save the current state in a map for reference if we backtrack
+				updateSpecifiedDomains(grid, row, col, domain.get(num)); //removes num from all applicable domains
+
+				
+				//printGrid(grid, "Instance " + String.valueOf(instance));
 
 				// return, if success, yay!
 				if (SolveSudoku(grid, choice))
 					return true;
 
-				// failure, un-assign & try again
-				//int temp = grid[row][col].value;
-				grid = states.get(instance-1); //retain previous state
-				grid[row][col].value = UNASSIGNED;
+				// failure, un-assign & try again and reassign the grid to the previous grid
+				Cell [][] previousGrid = states.get(instance); //retain previous state
+				for (int i = 0; i < N; i++)
+					for (int j = 0; j < N; j++)
+						grid[i][j] = previousGrid[i][j].clone();
 				
-				/*updateSpecifiedDomains(grid, row, col, temp, false);
-				while (domain.contains(temp))
-					grid[row][col].domain.remove((Integer)temp);*/
-				
-				//domain.remove((Integer)num);
+				domain = grid[row][col].domain; //reset the domain
+
 			}
 		}
 		count++;
-		instance--;
+		instance--;	//if we backtrack refer back one instance
 		return false; // this triggers backtracking
 	}
 	
